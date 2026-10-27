@@ -18,13 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Criar Gradle Wrapper se estiver faltando e Compilar APK
+    - name: Configurar Gradle Wrapper Versão 8.5 e Compilar APK
       run: |
-        # Se o gradlew não existir, o Gradle gera ele automaticamente na raiz
-        if [ ! -f "gradlew" ]; then
-          echo "Gerando o gradlew que estava faltando..."
-          gradle wrapper
-        fi
+        # Força a criação do wrapper usando a versão 8.5 (compatível com o projeto)
+        gradle wrapper --gradle-version 8.5
         
         chmod +x gradlew
         ./gradlew assembleDebug
