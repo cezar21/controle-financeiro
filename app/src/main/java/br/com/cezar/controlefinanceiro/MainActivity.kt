@@ -3,6 +3,7 @@ package br.com.cezar.controlefinanceiro
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -158,7 +159,6 @@ fun FinanceDashboard() {
                         }
                         Text("− ${brl(tx.amount)}", fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp))
                         IconButton(onClick = {
-                            // Remove da lista original
                             transactions = transactions.filterNot { it == tx }
                         }) {
                             Icon(Icons.Default.Delete, contentDescription = "Remover gasto", tint = Color.Red.copy(alpha = 0.7f))
