@@ -48,7 +48,6 @@ data class TransactionItem(
 
 class MainActivity : ComponentActivity() {
     
-    // Callbacks para Exportar e Importar arquivos
     var exportCallback: ((Uri) -> Unit)? = null
     var importCallback: ((Uri) -> Unit)? = null
 
@@ -73,7 +72,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Funções de Persistência Local (SharedPreferences)
 private fun saveTransactions(context: Context, list: List<TransactionItem>) {
     val prefs = context.getSharedPreferences("finance_prefs", Context.MODE_PRIVATE)
     val array = JSONArray()
@@ -134,27 +132,24 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
     val context = LocalContext.current
     val activity = context as? MainActivity
     
-    // Nomes dos Perfis
     var pfName by remember { mutableStateOf("Pessoa Física") }
     var pjName by remember { mutableStateOf("Pessoa Jurídica") }
     var showEditProfileDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
-    // Perfil Selecionado ("PF" ou "PJ")
     var selectedProfileKey by remember { mutableStateOf("PF") }
     
-    // Transações e Filtros
     var transactions by remember { mutableStateOf(emptyList<TransactionItem>()) }
     var showAddDialog by remember { mutableStateOf(false) }
-    var selectedFilterPayment by remember { mutableStateOf<String?>(null) } // "Pix" ou "Cartão"
+    var selectedFilterPayment by remember { mutableStateOf<String?>(null) }
     
-    // Filtro de Ano
+    // Ano inicial configurado para 2026 com dropdown centralizado
     var selectedYear by remember { mutableStateOf("2026") }
-    val yearsList = listOf("2024", "2025", "2026", "2027")
+    var showYearMenu by remember { mutableStateOf(false) }
+    val yearsList = listOf("2026", "2025", "2024", "2027", "2028")
 
     val currentDate = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")).format(Date())
 
-    // Configurar ações de exportar e importar arquivos na Activity
     DisposableEffect(transactions, pfName, pjName) {
         activity?.exportCallback = { uri ->
             try {
@@ -228,7 +223,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
         }
     }
 
-    // Carregar dados salvos ao iniciar
     LaunchedEffect(Unit) {
         val loadedNames = loadProfileNames(context)
         pfName = loadedNames.first
@@ -248,7 +242,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
         }
     }
 
-    // Filtrar transações pelo perfil ativo e pelo ano selecionado
     val profileTransactions = transactions.filter { 
         it.profile == selectedProfileKey && it.date.endsWith(selectedYear)
     }
@@ -270,7 +263,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        // Cabeçalho e Menu de Opções (Backup)
         item {
             Row(
                 Modifier.fillMaxWidth(),
@@ -293,17 +285,11 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(
                                 text = { Text("Exportar Dados (Backup)") },
-                                onClick = {
-                                    showMenu = false
-                                    onExport()
-                                }
+                                onClick = { showMenu = false; onExport() }
                             )
                             DropdownMenuItem(
                                 text = { Text("Importar Dados (Restaurar)") },
-                                onClick = {
-                                    showMenu = false
-                                    onImport()
-                                }
+                                onClick = { showMenu = false; onImport() }
                             )
                         }
                     }
@@ -326,33 +312,48 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
             }
         }
 
-        // Card Total do Ano
+        // Card Total com Seletor de Ano Centralizado
         item {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Green, contentColor = Color.White),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Total de despesas • $currentProfileName", style = MaterialTheme.typography.bodyMedium)
-                        
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    Modifier.padding(22.dp).fillMaxWidth(), 
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Total de despesas • $currentProfileName", style = MaterialTheme.typography.bodyMedium)
+                    
+                    // Botão Centralizado para escolher o Ano
+                    Box {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White.copy(alpha = 0.2f),
+                            modifier = Modifier.clickable { showYearMenu = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text("Ano: $selectedYear", fontWeight = FontWeight.Bold, color = Color.White)
+                                Text("▼", style = MaterialTheme.typography.bodySmall, color = Color.White)
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showYearMenu,
+                            onDismissRequest = { showYearMenu = false }
+                        ) {
                             yearsList.forEach { yr ->
-                                FilterChip(
-                                    selected = selectedYear == yr,
-                                    onClick = { selectedYear = yr },
-                                    label = { Text(yr, style = MaterialTheme.typography.labelSmall) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = Color.White,
-                                        selectedLabelColor = Green,
-                                        containerColor = Green.copy(alpha = 0.5f),
-                                        labelColor = Color.White
-                                    )
+                                DropdownMenuItem(
+                                    text = { Text(yr, fontWeight = if (selectedYear == yr) FontWeight.Bold else FontWeight.Normal) },
+                                    onClick = {
+                                        selectedYear = yr
+                                        showYearMenu = false
+                                    }
                                 )
                             }
                         }
@@ -364,7 +365,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
             }
         }
 
-        // Meios de Pagamento (Pix / Cartão)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(
@@ -403,7 +403,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
             }
         }
 
-        // Título das Transações + Botão Adicionar
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 val titleList = if (selectedFilterPayment == null) "Transações ($selectedYear)" else "Transações via $selectedFilterPayment ($selectedYear)"
@@ -412,7 +411,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
             }
         }
         
-        // Lista de Transações
         if (displayedTransactions.isEmpty()) {
             item {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -446,7 +444,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
         }
     }
 
-    // Modal de Adicionar Nova Despesa
     if (showAddDialog) {
         var description by remember { mutableStateOf("") }
         var amount by remember { mutableStateOf("") }
@@ -520,7 +517,6 @@ fun FinanceDashboard(onExport: () -> Unit, onImport: () -> Unit) {
         )
     }
 
-    // Modal de Editar Nomes dos Perfis
     if (showEditProfileDialog) {
         var tempPfName by remember { mutableStateOf(pfName) }
         var tempPjName by remember { mutableStateOf(pjName) }
