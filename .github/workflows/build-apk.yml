@@ -18,13 +18,14 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Configurar Gradle Wrapper Versão 8.5 e Compilar APK
+    - name: Forçar Gradle Wrapper 8.5 e Compilar APK
       run: |
-        # Força a criação do wrapper usando a versão 8.5 (compatível com o projeto)
-        gradle wrapper --gradle-version 8.5
+        # Baixa e configura o Gradle 8.5 de forma limpa na raiz do projeto
+        gradle wrapper --gradle-version 8.5 --distribution-type bin
         
+        # Garante permissão e executa a compilação
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
         
     - name: Salvar APK como Artefato
       uses: actions/upload-artifact@v4
