@@ -18,17 +18,18 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Encontrar pasta do projeto e compilar APK
+    - name: Encontrar gradlew e compilar APK
       run: |
-        # Encontra onde está o arquivo gradlew automaticamente
+        # Localiza o arquivo gradlew onde quer que ele esteja
         GRADLEW_PATH=$(find . -name "gradlew" -type f -print -quit)
         PROJECT_DIR=$(dirname "$GRADLEW_PATH")
         
-        echo "Pasta encontrada: $PROJECT_DIR"
+        echo "Caminho do gradlew: $GRADLEW_PATH"
+        echo "Pasta do projeto: $PROJECT_DIR"
         
-        # Entra na pasta do projeto, dá permissão e compila
+        # Dá permissão usando o caminho exato e compila
+        chmod +x "$GRADLEW_PATH"
         cd "$PROJECT_DIR"
-        chmod +x gradlew
         ./gradlew assembleDebug
         
     - name: Salvar APK como Artefato
