@@ -18,12 +18,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Forçar Gradle Wrapper 8.5 e Compilar APK
+    - name: Injetar Dependência do Compose Compiler e Compilar
       run: |
-        # Baixa e configura o Gradle 8.5 de forma limpa na raiz do projeto
-        gradle wrapper --gradle-version 8.5 --distribution-type bin
-        
-        # Garante permissão e executa a compilação
+        # Adiciona o plugin do Compose necessário para o Kotlin moderno no arquivo app/build.gradle.kts
+        if ! grep -q "org.jetbrains.kotlin.plugin.compose" app/build.gradle.kts; then
+          echo "Adicionando plugin do Compose..."
+          sed -i 's/plugins {/plugins {\n    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"/g' app/build.gradle.kts
+        fi
+
+        gradle wrapper --gradle-version 8.5
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
         
