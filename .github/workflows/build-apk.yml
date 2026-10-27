@@ -18,18 +18,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Encontrar gradlew e compilar APK
+    - name: Criar Gradle Wrapper se estiver faltando e Compilar APK
       run: |
-        # Localiza o arquivo gradlew onde quer que ele esteja
-        GRADLEW_PATH=$(find . -name "gradlew" -type f -print -quit)
-        PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+        # Se o gradlew não existir, o Gradle gera ele automaticamente na raiz
+        if [ ! -f "gradlew" ]; then
+          echo "Gerando o gradlew que estava faltando..."
+          gradle wrapper
+        fi
         
-        echo "Caminho do gradlew: $GRADLEW_PATH"
-        echo "Pasta do projeto: $PROJECT_DIR"
-        
-        # Dá permissão usando o caminho exato e compila
-        chmod +x "$GRADLEW_PATH"
-        cd "$PROJECT_DIR"
+        chmod +x gradlew
         ./gradlew assembleDebug
         
     - name: Salvar APK como Artefato
